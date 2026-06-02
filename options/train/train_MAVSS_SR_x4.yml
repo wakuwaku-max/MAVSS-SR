@@ -1,6 +1,6 @@
 # general settings
-name: train_HAT_SRx4_ImageNet_from_scratch
-model_type: HATModel
+name: train_MAVSS_SR_x4
+model_type: MAVSSSRModel
 scale: 4
 num_gpu: auto
 manual_seed: 0
@@ -11,7 +11,7 @@ datasets:
     name: ImageNet
     type: ImageNetPairedDataset
     dataroot_gt: datasets/ImageNet/GT
-    meta_info_file: hat/data/meta_info/meta_info_ImageNet_GT.txt
+    meta_info_file: data/meta_info/meta_info_DF2Ksub_GT.txt
     io_backend:
       type: disk
 
@@ -53,7 +53,7 @@ datasets:
 
 # network structures
 network_g:
-  type: HAT
+  type: MAVSSSR
   upscale: 4
   in_chans: 3
   img_size: 64
@@ -130,3 +130,4 @@ logger:
 dist_params:
   backend: nccl
   port: 29500
+

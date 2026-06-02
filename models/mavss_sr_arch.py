@@ -1338,7 +1338,7 @@ class Upsample(nn.Sequential):
 
 
 @ARCH_REGISTRY.register()
-class HAT(nn.Module):
+class MAVSSSR(nn.Module):
     r""" MAVSS-SR network.
 
         This implementation keeps the original registry class name for compatibility
@@ -1395,7 +1395,7 @@ class HAT(nn.Module):
                  upsampler='',
                  resi_connection='1conv',
                  **kwargs):
-        super(HAT, self).__init__()
+        super(MAVSSSR, self).__init__()
 
         self.window_size = window_size
         self.shift_size = window_size // 2

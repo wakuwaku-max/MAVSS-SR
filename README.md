@@ -1,162 +1,186 @@
-# MAVSS-SR
+# MAVSS-SR: Multi-Band Attention and Visual State Space for Image Super-Resolution
 
-Official code release for **MAVSS-SR: An Image Super-Resolution Network Using Multi-Band Attention and Visual State Space**.
+## Project Overview
 
-MAVSS-SR is an image super-resolution network built with multi-band feature separation, band-specific feature modeling, visual state space modeling, and gated cross-band interaction.
+This repository provides the released code for **MAVSS-SR: An Image Super-Resolution Network Using Multi-Band Attention and Visual State Space**.
 
-## Main Components
+MAVSS-SR is designed for single-image super-resolution. It improves reconstruction quality by separating features into multiple frequency bands and applying band-specific processing. High-frequency details are modeled with a visual state space module, mid-frequency texture features are modeled with deformable convolution, and low-frequency structural information is modeled with dilated convolution. A gated cross-band interaction module is used to exchange complementary information among different frequency bands.
 
-- Band separation for low-, mid-, and high-frequency feature branches
-- Multi-band attention module (MBAM)
-- Visual state space model (VSSM) for high-frequency feature modeling
-- Deformable convolution branch for mid-frequency texture modeling
-- Dilated convolution branch for low-frequency structure modeling
-- Gated cross-band interaction module (GCBI)
-- MAVSS-SR reconstruction network for image super-resolution
+The project is built upon the open-source image restoration framework **BasicSR**:
 
-The core implementation is in:
+> BasicSR: https://github.com/XPixelGroup/BasicSR
 
-```text
-hat/archs/hat_arch.py
-```
+BasicSR provides the training, validation, testing, logging, metric calculation, and registry mechanisms. This repository releases the MAVSS-SR model code and experiment configuration files that can be used with a BasicSR-style workflow.
 
-## Environment
+## Released Components
 
-Create the environment with either:
+This repository contains the following components.
 
-```bash
-conda env create -f environment.yml
-```
+### 1. Model Code
 
-or install the Python dependencies:
-
-```bash
-pip install -r requirements.txt
-python setup.py develop
-```
-
-The model uses PyTorch, BasicSR-style training/testing utilities, torchvision deformable convolution, and Mamba selective scan.
-
-## Dataset Preparation
-
-Place datasets under:
+The core MAVSS-SR architecture is provided in:
 
 ```text
-datasets/
+models/mavss_sr_arch.py
 ```
 
-Expected benchmark dataset layout follows the BasicSR paired-image format, for example:
+It includes the main modules used by MAVSS-SR:
+
+- band separation;
+- visual state space modeling;
+- frequency gated modulation;
+- deformable convolution branch;
+- dilated convolution branch;
+- multi-band attention module;
+- gated cross-band interaction;
+- MAVSS-SR reconstruction network.
+
+The architecture is registered in the BasicSR registry as `MAVSSSR`.
+
+### 2. Model Wrapper
+
+The BasicSR-style model wrapper is provided in:
 
 ```text
-datasets/
-  Set5/
-    GTmod4/
-    LRbicx4/
-  Set14/
-    GTmod4/
-    LRbicx4/
-  BSD100/
-    GTmod4/
-    LRbicx4/
-  Urban100/
-    GTmod4/
-    LRbicx4/
-  Manga109/
-    GTmod4/
-    LRbicx4/
+models/mavss_sr_model.py
 ```
 
-Training metadata is provided in:
+It handles validation, image padding, tile-based inference, metric calculation, and result saving. The wrapper is registered in the BasicSR registry as `MAVSSSRModel`.
+
+### 3. Dataset Code
+
+The paired image dataset code and metadata file are provided in:
 
 ```text
-hat/data/meta_info/meta_info_DF2Ksub_GT.txt
+data/imagenet_paired_dataset.py
+data/meta_info/meta_info_DF2Ksub_GT.txt
 ```
 
-## Pretrained Models
+Dataset paths can be changed directly in the training and testing `.yml` files.
 
-Place pretrained weights under:
+### 4. Training and Testing Configuration Files
+
+Training configs:
 
 ```text
-pretrained/
+options/train/train_MAVSS_SR_x2.yml
+options/train/train_MAVSS_SR_x3.yml
+options/train/train_MAVSS_SR_x4.yml
 ```
 
-or update the `pretrain_network_g` path in the corresponding test config.
-
-## Testing
-
-Run x2, x3, or x4 testing with:
-
-```bash
-python hat/test.py -opt options/test/test_MAVSS_SR_x2.yml
-python hat/test.py -opt options/test/test_MAVSS_SR_x3.yml
-python hat/test.py -opt options/test/test_MAVSS_SR_x4.yml
-```
-
-Results are saved under:
+Testing configs:
 
 ```text
-results/
+options/test/test_MAVSS_SR_x2.yml
+options/test/test_MAVSS_SR_x3.yml
+options/test/test_MAVSS_SR_x4.yml
 ```
 
-## Training
+These files define dataset paths, model parameters, optimizer settings, learning rate schedules, validation settings, pretrained checkpoint paths, and result-saving options.
 
-Run training with:
+### 5. Complexity Script
 
-```bash
-python hat/train.py -opt options/train/train_MAVSS_SR_x2.yml
-python hat/train.py -opt options/train/train_MAVSS_SR_x3.yml
-python hat/train.py -opt options/train/train_MAVSS_SR_x4.yml
-```
-
-For distributed training, launch `hat/train.py` with the PyTorch distributed launcher and the same config files.
-
-## Complexity Evaluation
-
-The VSSM and window-attention complexity comparison script is provided at:
+The VSSM and window-attention complexity comparison script is provided in:
 
 ```text
 tools/test_attention_vs_vssm_complexity_256.py
 ```
 
-Run:
+## Framework Dependency
+
+This project depends on BasicSR. Please install and configure BasicSR before running training or testing.
 
 ```bash
-python tools/test_attention_vs_vssm_complexity_256.py
+git clone https://github.com/XPixelGroup/BasicSR.git
+cd BasicSR
+pip install -r requirements.txt
+python setup.py develop
 ```
+
+Additional dependencies used by MAVSS-SR include:
+
+```text
+torch
+torchvision
+einops
+mamba-ssm
+causal-conv1d
+thop
+```
+
+## How to Use
+
+Copy or place the released files into a BasicSR-style project, then make sure the custom model, architecture, and dataset files are imported by the framework registry.
+
+A typical placement is:
+
+```text
+basicsr/
+  archs/
+    mavss_sr_arch.py
+  models/
+    mavss_sr_model.py
+  data/
+    imagenet_paired_dataset.py
+options/
+  train/
+  test/
+```
+
+Then run training or testing with the corresponding config files.
+
+## Training
+
+Example commands:
+
+```bash
+python basicsr/train.py -opt options/train/train_MAVSS_SR_x2.yml
+python basicsr/train.py -opt options/train/train_MAVSS_SR_x3.yml
+python basicsr/train.py -opt options/train/train_MAVSS_SR_x4.yml
+```
+
+For distributed training, use the PyTorch distributed launcher according to the BasicSR training instructions.
+
+## Testing
+
+Example commands:
+
+```bash
+python basicsr/test.py -opt options/test/test_MAVSS_SR_x2.yml
+python basicsr/test.py -opt options/test/test_MAVSS_SR_x3.yml
+python basicsr/test.py -opt options/test/test_MAVSS_SR_x4.yml
+```
+
+Before testing, update `pretrain_network_g` in the corresponding `.yml` file to the path of the released pretrained checkpoint.
 
 ## Repository Structure
 
 ```text
 MAVSS-SR/
   README.md
-  LICENSE
-  requirements.txt
-  environment.yml
-  setup.py
-  setup.cfg
-  VERSION
-  hat/
-    train.py
-    test.py
-    archs/
-      hat_arch.py
-    models/
-      hat_model.py
-    data/
-      imagenet_paired_dataset.py
-      meta_info/
+  data/
+    imagenet_paired_dataset.py
+    meta_info/
+      meta_info_DF2Ksub_GT.txt
+  models/
+    mavss_sr_arch.py
+    mavss_sr_model.py
   options/
     train/
+      train_MAVSS_SR_x2.yml
+      train_MAVSS_SR_x3.yml
+      train_MAVSS_SR_x4.yml
     test/
+      test_MAVSS_SR_x2.yml
+      test_MAVSS_SR_x3.yml
+      test_MAVSS_SR_x4.yml
   tools/
-  pretrained/
-  datasets/
-  results/
+    test_attention_vs_vssm_complexity_256.py
 ```
 
 ## Acknowledgements
 
-This project is built on the BasicSR training/testing framework and reuses parts of the HAT project structure. We also acknowledge the Mamba selective scan implementation used by the VSSM module.
+This project is developed based on BasicSR. We also acknowledge the Mamba selective scan implementation used by the visual state space module.
 
 ## Citation
 
@@ -169,4 +193,3 @@ If this code is useful for your work, please cite:
   year={2026}
 }
 ```
-

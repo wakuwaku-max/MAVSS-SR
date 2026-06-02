@@ -7,7 +7,7 @@ from thop import profile
 
 sys.path.insert(0, os.path.abspath("."))
 
-import hat.archs.hat_arch as hat_arch
+from models import mavss_sr_arch
 
 
 torch.backends.cudnn.benchmark = True
@@ -117,7 +117,7 @@ class WindowAttention2D(nn.Module):
 
 
 def build_mavss_model():
-    model = hat_arch.HAT(
+    model = mavss_sr_arch.MAVSSSR(
         upscale=4,
         in_chans=3,
         img_size=64,
